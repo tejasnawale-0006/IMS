@@ -1,0 +1,358 @@
+import json
+import random
+import time
+import os.path
+
+#Add Product
+def add_product():
+    with open("IMS.json","r") as f:
+        data=f.read()
+        if data=="":
+            Products={}
+        else:
+            Products=json.loads(data) 
+        p_id=input("Enter Product ID")
+        if p_id in Products:
+                print("already exists")
+        else:
+                name=input("enter name")
+                price=int(input("Enter Price"))
+                stock=int(input("Enter Stock"))
+                exp=input("enter Expiry date(dd/mm/yy)")
+                Products[p_id]={"Name":name,"Price":price,"Stock":stock,"Expiry Date":exp}
+                save(Products)
+                print("==========================")
+                print("Product Added!!")
+                print("==========================")
+            
+#Update Product            
+def update(p_id):
+    with open("IMS.json","r") as f:
+        data=f.read()
+    Products=json.loads(data)
+    ch=-1
+    while(ch!='5'):
+        print("---------------------------")
+        print("(    1.Add Stock           )")
+        print("(    2.Update Price        )")
+        print("(    3.Update Expiry Date  )")
+        print("(    4.Update Name         )")
+        print("(    5.Exit                )")
+        print("---------------------------")
+        ch=input("Enter choice")
+        print("...................................")
+        if ch=='1':
+            
+            st=int(input('Enter Stocks:'))
+            Products[p_id]['Stock']+=st
+            save(Products)
+            print("==========================")
+            print("Product Updated!!")
+            print("==========================")
+        elif ch=='2':
+            
+            price=int(input('Enter Updated Price:'))
+            Products[p_id]['Price']=price
+            save(Products)
+            print("==========================")
+            print("Product Updated!!")
+            print("==========================")
+        elif ch=='3':
+            
+
+            date=input('Enter Date:')
+            Products[p_id]['Expiry Date']=date
+            save(Products)
+            print("==========================")
+            print("Product Updated!!")
+            print("==========================")
+        elif ch=='4':
+            Name=input('Update Name:')
+            Products[p_id]['Name']=Name
+            save(Products)
+            print("==========================")
+            print("Product Updated!!")
+            print("==========================")
+            
+            
+
+
+
+#Print Sales History
+def sales_history():
+    with open("Sales.json", "r") as f:
+        data=f.read()
+       # print(data)
+    if data=="":
+        print("No Records!!")
+    else:
+        Sales=json.loads(data)
+        key=Sales.keys()
+       # print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        print(" T_ID","          ","DATE","                    ","Product_Id","     ","QTY")
+        
+        for i in key:
+            print(i,end="      ")
+            p=Sales[i].keys()
+            for j in p:
+                if j=='Details':
+                    print(Sales[i][j]["DATE & TIME"],end="        ")
+                else:
+                    print("*",j,"           ",Sales[i][j]['Quantity'])
+                    print("                                    ",end="       ")
+            print("")
+    print("============================================================================")        
+                    
+          
+
+#Save Sales Record
+def sales(t_id,ti,p,Products,q,tot):
+    if os.path.isfile('Sales.json'):
+        with open("Sales.json", "r") as f:
+            data=f.read()
+           # print(data)
+        if data=="":
+            Sales={}
+        else:
+            Sales=json.loads(data)
+        #print(Sales)    
+        #Sales[t_id]={'Product_Id':p,'Name':Products[p_id]['Name'],'Price':Products[p_id]['Price'],'Quantity':q,'DATE & Time':ti}
+        Sales[t_id]={"Details":{"DATE & TIME":ti,"Transaction Amount":tot}}
+        for i in range(len(p)):
+            Sales[t_id][p[i]]={"Name":Products[p[i]]['Name'],'Price':Products[p[i]]['Price'],'Quantity':q[i],'Total':q[i]*Products[p[i]]['Price']}
+       # Sales[t_id]["DATE & TIME"]=ti
+        #Sales[t_id]["Transaction Amount"]=tot   
+            
+        js=json.dumps(Sales)
+       # print(js)
+        with open("Sales.json", "w") as f:
+            f.write(js)
+    else:
+         with open("Sales.json", "w") as f:
+            data=f.write("")
+         with open("Sales.json", "r") as f:
+            
+            data=f.read()
+           # print(data)
+         if data=="":
+            Sales={}
+         else:
+            Sales=json.loads(data)
+        #print(Sales)    
+        #Sales[t_id]={'Product_Id':p,'Name':Products[p_id]['Name'],'Price':Products[p_id]['Price'],'Quantity':q,'DATE & Time':ti}
+         Sales[t_id]={"Details":{"DATE & TIME":ti,"Transaction Amount":tot}}
+         for i in range(len(p)):
+            Sales[t_id][p[i]]={"Name":Products[p[i]]['Name'],'Price':Products[p[i]]['Price'],'Quantity':q[i],'Total':q[i]*Products[p[i]]['Price']}
+       # Sales[t_id]["DATE & TIME"]=ti
+        #Sales[t_id]["Transaction Amount"]=tot   
+            
+         js=json.dumps(Sales)
+       # print(js)
+         with open("Sales.json", "w") as f:
+            f.write(js)
+        
+#Print Bill
+def bill(p,Products,t_id,ti,qu,c):
+    c=0
+    print("****************************************BILL RECEIPT************************************")
+    print("*                         ","Date:",ti,"   *")
+    print("*  Transaction ID:  ",t_id,"                                  *")
+    print("*                 ",end="       ")
+    print("       Quantity   Price :","          *")
+    for i in range(len(p)):
+        c=c+(qu[i]*Products[p[i]]['Price'])
+        print("*  Product Name:",Products[p[i]]['Name']                     ,end="           ")
+        print(qu[i],"      ", Products[p[i]]['Price'] ,"             *")
+    print("*                                                            *")
+   # print("*                                                          *")
+   #
+    print("_____________________________________________________________")
+    print("*                             ","Total|",c,"|                    *")
+    print("----------------------------------------------------------") 
+    print("*                                                            *")
+    print("***************************************************************************") 
+    sales(t_id,ti,p,Products,qu,c)
+    
+    
+#Buy Product    
+def buy(Products):
+    n=int(input("How many Items?"))
+    p=[]
+    qu=[]
+    c=0
+    for i in range(n):
+        
+        p_id=input("Enter Product Id:")
+
+        if p_id in Products:
+            cs=Products[p_id]['Stock']  
+            if cs==0:
+                print('Sorry We Ran Out Of Stock')
+            else:    
+                p_qt=int(input("Enter Quantity:"))
+
+                if p_qt<=cs:
+                    p.append(p_id)  
+                    qu.append(p_qt)
+                    c=c+(Products[p_id]['Price'])*p_qt
+                    Products[p_id]['Stock']-=p_qt
+                    t_id=random.randrange(10000,99999,1)
+                    ti=time.ctime()
+                    #sales(t_id,ti,p_id,Products,p_qt)
+
+
+                else:
+                    print("We Are",(p_qt-cs),'Short')
+                    ch=input("Do You Want To Buy Available Stocks??(Y/N)")
+                    if ch=='Y'or ch=='y':
+                        p.append(p_id)  
+                        qu.append(cs)
+                        c+=(Products[p_id]['Price'])*cs
+                        Products[p_id]['Stock']=0
+                        t_id=random.randrange(10000,99999,1)
+                        ti=time.ctime()
+                        
+                    
+
+                
+        else:
+            print('Not Available')
+    else:
+        if c!=0:
+            print("Your Total Is",c)
+            ch=input('CONFIRM ORDER(Y/N)')
+            if ch=='y'or ch=='Y':
+
+                bill(p,Products,t_id,ti,qu,c) 
+            else:
+                Print("Order Cancelled!!!!")
+            print("Thank You")
+            print('----------------------------------------------')
+
+
+        
+        
+#To View Product List        
+def check_prod(Products):
+    print('Product_Id')
+    for i in Products.keys():
+        print("  ",i,'-->',end=" ")
+        for j in Products[i].keys():
+            print(j,':',Products[i][j],end="      ")
+        print("")   
+        print("====================================================================================================")
+        
+        
+#Save Data In File        
+def save(Products) :
+         
+    js=json.dumps(Products)
+    #print(js)
+    with open("IMS.json", "w") as f:
+        f.write(js)
+        
+        
+#Delete Product        
+def delete(p_id):
+     with open("IMS.json","r") as f:
+        data=f.read()
+     Products=json.loads(data)
+     del Products[p_id]
+     save(Products)
+     print("==========================")
+     print("Product Deleted!!")
+     print("==========================")
+    
+#Admin Login(Id=5member,pass=5member)
+def login():
+    user_id=input("Enter user_ID:")
+    user_pass=input("Enter Password:")
+    if user_id=="5member" and user_pass=="5member":
+        ch=-1
+        while ch!='5':
+            with open("IMS.json", "r") as f:
+                data=f.read() 
+                if data=="":
+                  print("No REcords")
+                  break
+                else:
+
+                    Products=json.loads(data) 
+                    print("---------------------")
+                    print("(  1.Add Product     )")
+                    print("(  2.Update Stocks   )")
+                    print("(  3.Sales History   )")
+                    print("(  4.Delete Product  )")
+                    print("(  5.LOGOUT          )")
+                    print("---------------------")
+                    ch=input("Enter Your Choice:")
+                    print("...................................")
+                    
+                    if ch=='2':
+                        p_id=input("Enter Product ID:")
+                        update(p_id)
+                        
+                        
+                    if ch=='1':
+                       add_product()
+                    if ch=="3":
+                        sales_history()
+                    if ch=="4":
+                        p_id=input("Enter Product ID:")
+                        delete(p_id)
+
+
+
+        else:
+            print("====================")
+            print("LOGING OUT...")
+            print("====================")
+    else:
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("Incorrect ID or Password")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+        
+        
+if os.path.isfile('IMS.json'):#Check File Is present or not
+    
+
+    ch=-1
+    while ch!='4':
+        with open("IMS.json", "r") as f:
+            data=f.read() 
+            if data=="":
+              print("No REcords")
+              break
+            else:
+
+                Products=json.loads(data)
+                
+                print("---------------------")
+                print("(  1.View Product List   )")
+                print("(  2.Buy Product    )")
+                print("(  3.Admin Login    )")
+                print("(  4.EXIT           )")
+                print("---------------------")
+                ch=input("Enter Your Choice:")
+                print("...................................")
+                if ch=='2':
+                    buy(Products)
+                    save(Products)
+                if ch=='1':
+                   check_prod(Products)
+                if ch=="3":
+                    
+                    login()
+                    
+
+
+
+    else:
+       print("Thank You!!!!")
+else:
+     with open("IMS.json", "w") as f:
+            data=f.write("")
+            
+#update('51')            
+#sales_history()
